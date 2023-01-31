@@ -28,6 +28,8 @@ describe('driver/src/cy/snapshots_css', () => {
         addStyles('<link media="print" rel="stylesheet" href="/fixtures/generic_styles_print.css" />', 'head'),
         addStyles('<link media="all" rel="stylesheet" href="/fixtures/generic_styles_2.css" />', 'body'),
         addStyles('<link rel="stylesheet" href="/fixtures/generic_styles_3.css" />', 'body'),
+        addStyles('<style>.foo {--background: aquamarine;background: var(--background);background-clip: border-box;width: 50px;height: 50px;}</style>', 'head'),
+        addStyles('<link rel="stylesheet" href="/fixtures/var_mixed_longform.css" />', 'head'),
       ])
     })
   })
@@ -37,7 +39,7 @@ describe('driver/src/cy/snapshots_css', () => {
       const { headStyleIds, bodyStyleIds } = snapshotCss.getStyleIds()
       const another = snapshotCss.getStyleIds()
 
-      expect(headStyleIds).to.have.length(3)
+      expect(headStyleIds).to.have.length(5)
       expect(headStyleIds[0]).to.eql({ hrefId: 'http://localhost:3500/fixtures/generic_styles.css' })
 
       expect(bodyStyleIds).to.have.length(2)
@@ -79,7 +81,7 @@ describe('driver/src/cy/snapshots_css', () => {
     it('ignores other media stylesheets', () => {
       const { headStyleIds } = snapshotCss.getStyleIds()
 
-      expect(headStyleIds).to.have.length(3)
+      expect(headStyleIds).to.have.length(5)
     })
 
     it('returns new id if css has been modified', () => {
@@ -89,8 +91,8 @@ describe('driver/src/cy/snapshots_css', () => {
       snapshotCss.onCssModified('http://localhost:3500/fixtures/generic_styles.css')
       const idsAfter = snapshotCss.getStyleIds()
 
-      expect(idsBefore.headStyleIds).to.have.length(3)
-      expect(idsAfter.headStyleIds).to.have.length(3)
+      expect(idsBefore.headStyleIds).to.have.length(5)
+      expect(idsAfter.headStyleIds).to.have.length(5)
       expect(idsAfter.headStyleIds[0]).to.eql({ hrefId: 'http://localhost:3500/fixtures/generic_styles.css' })
       // same href, but id should be referentially NOT equal
       expect(idsBefore.headStyleIds[0]).not.to.equal(idsAfter.headStyleIds[0])
@@ -166,7 +168,7 @@ describe('driver/src/cy/snapshots_css', () => {
 
       const { headStyles } = getStyles()
 
-      expect(headStyles[3]).to.equal('.foo { color: red; }')
+      expect(headStyles[5]).to.equal('.foo { color: red; }')
     })
 
     it('replaces CSS paths of style tags with absolute paths', () => {
@@ -184,7 +186,7 @@ describe('driver/src/cy/snapshots_css', () => {
 
       const { headStyles } = getStyles()
 
-      expect(normalizeStyles(headStyles[3])).to.include(normalizeStyles(`
+      expect(normalizeStyles(headStyles[5])).to.include(normalizeStyles(`
         @font-face {
           font-family: "Some Font";
           src: url('http://localhost:3500/fonts/some-font.woff2')format('woff2'),url('http://localhost:3500/fonts/some-font.woff')format('woff'),url('http://localhost:3500/fonts/some-font.ttf')format('truetype');
@@ -196,13 +198,20 @@ describe('driver/src/cy/snapshots_css', () => {
       return addStyles('<link rel="stylesheet" href="nested/with_paths.css" />', 'head').then(() => {
         const { headStyles } = getStyles()
 
-        expect(normalizeStyles(headStyles[3])).to.include(normalizeStyles(`
+        expect(normalizeStyles(headStyles[5])).to.include(normalizeStyles(`
           @font-face {
             font-family: 'Some Font';
             src: url('http://localhost:3500/fixtures/fonts/some-font.woff2') format('woff2'), url('http://localhost:3500/fixtures/fonts/some-font.woff') format('woff'), url('http://localhost:3500/fixtures/fonts/some-font.ttf') format('truetype');
           }
         `))
       })
+    })
+
+    it('handles browser bugs with mixed css variables, long-form css properties, and short-form css properties', () => {
+      const { headStyles } = getStyles()
+
+      expect(headStyles[3]).to.equal('.foo {--background: aquamarine;background: var(--background);background-clip: border-box;width: 50px;height: 50px;}')
+      expect(headStyles[4]).to.equal('.bar {--background: aquamarine;background: var(--background);background-clip: border-box;width: 50px;height: 50px;}')
     })
   })
 })

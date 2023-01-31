@@ -82,11 +82,7 @@ const getExternalCssContents = (href, stylesheet) => {
 const getInlineCssContents = (stylesheet, $$) => {
   if (!stylesheet.sheet) return $$(stylesheet).text()
 
-  const rules = stylesheet.sheet.cssRules
-
-  return reduceText(rules, (rule) => {
-    return rule.cssText
-  })
+  return stylesheet.innerHTML
 }
 
 export const create = ($$, state) => {
